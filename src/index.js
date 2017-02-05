@@ -57,9 +57,9 @@ function returnCounter(number = 0) {
  Функция должна привязать переданные аргументы к функции F и вернуть получившуюся функцию
  */
 function bindFunction(fn) {
-	var args = arguments;
+  	var args = Array.prototype.slice.call(arguments, 1);
 	return function () {
-		return fn.apply(this, args)
+		return fn.apply(this, args);
 	}
 }
 

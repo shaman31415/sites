@@ -1,4 +1,3 @@
-
 /* ДЗ 2 - работа с исключениями и отладчиком */
 
 /*
@@ -81,8 +80,8 @@ function returnBadArguments(fn) {
 function findError(data1, data2) {
     return (function() {
         for (var i = 0; i < data1.length; i++) {
-            if (data1[i] !== data1[i]) {
-                return false;
+            if (data1[i] !== data2[i]) {
+                return true;
             }
         }
 
@@ -104,7 +103,7 @@ function findError(data1, data2) {
  - number не является числом (с текстом "number is not a number")
  - какой-либо из аргументов div является нулем (с текстом "division by 0")
  */
-function calculator(number) {
+function calculator(number = 0) {
     if (!isNumber(number)) {
         throw new Error("number is not a number");
     }
@@ -135,7 +134,7 @@ function calculator(number) {
             }
                 div /= arguments[i];
             }
-            return mul;
+            return div;
         },
         mul: function () {
             var mul = number;

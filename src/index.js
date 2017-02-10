@@ -80,8 +80,8 @@ function returnBadArguments(fn) {
 function findError(data1, data2) {
     return (function() {
         for (var i = 0; i < data1.length; i++) {
-            if (data1[i] !== data2[i]) {
-                return true;
+            if (data1[i] != data2[i] && !isNaN(data1[i])) {
+                return false;
             }
         }
 

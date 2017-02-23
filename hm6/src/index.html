@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Document</title>
+  <meta charset="UTF-8">
+</head>
+<body>
+  <form action="#" id="homework-container">
+    <input type="text" name="city" id="filter-input" placeholder="Введите название города">
+  </form>
+  <script>
+    "use strict";
+    var filterInput = document.getElementById("filter-input");
+    var container = document.getElementById("homework-container");
+    filterInput.addEventListener("keyup", function (e) {
+      var divResults = document.createElement("div"),
+          xhr = new XMLHttpRequest(),
+          o;
+
+      for (var i = 0; i < container.children.length; i++) {
+        if (container.children[i] !== filterInput) {
+          container.removeChild(container.children[i]);
+        }
+      }
+      xhr.open('GET', 'https://raw.githubusercontent.com/smelukov/citiesTest/master/cities.json', false);
+      xhr.send();
+
+      o = JSON.parse(xhr.responseText);
+      o.sort(function (a, b) {
+          return a.name > b.name;
+      });
+      var arr = [];
+      if ((e.keyCode >= 65 && e.keyCode <= 90) || e.keyCode === 8) {
+        if (e.currentTarget.value !== "") {
+          for (var i = 0; i < o.length; i++) {
+            if (isMatching(o[i].name, e.currentTarget.value)) {
+              arr.push(o[i].name);
+            }
+          }
+          if (arr.length === 0) {
+            divResults.innerHTML = "Результатов не найдено";
+          } else {
+            for (var i = 0; i < arr.length; i++) {
+              divResults.innerHTML += arr[i] + "<br>";
+            }
+          }
+        }
+      }
+      container.appendChild(divResults);
+    });
+
+    function isMatching(full, chunk) {
+      if (full.toLowerCase().indexOf(chunk.toLowerCase()) === 0) {
+        return true;
+      }
+      return false;
+    }
+  </script>
+</body>
+</html>

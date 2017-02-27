@@ -53,10 +53,10 @@ function loadTowns() {
  * @return {boolean}
  */
 function isMatching(full, chunk) {
-	if (full.toLowerCase().indexOf(chunk.toLowerCase()) === -1) {
-		return false;
+	if (full.toLowerCase().indexOf(chunk.toLowerCase()) === 0) {
+		return true;
 	}
-	return true;
+	return false;
 }
 
 let loadingBlock = homeworkContainer.querySelector('#loading-block');
@@ -64,8 +64,61 @@ let filterBlock = homeworkContainer.querySelector('#filter-block');
 let filterInput = homeworkContainer.querySelector('#filter-input');
 let filterResult = homeworkContainer.querySelector('#filter-result');
 
-filterInput.addEventListener('keyup', function() {
+var xhr = new XMLHttpRequest(),
+	o;
+xhr.open('GET', 'https://raw.githubusercontent.com/smelukov/citiesTest/master/cities.json', true);
+xhr.send();
+
+filterBlock.style.display = "none";
+
+var readyFunc = function readyFunc() {
+	if (xhr.readyState !== 4) {
+		loadingBlock.innerHTML = "Не удалось загрузить города";
+		var repeatButton = document.createElement("button");
+		repeatButton.innerText = "Повторить";
+		loadingBlock.appendChild(repeatButton);
+		repeatButton.addEventListener("click", function () {
+			readyFunc();
+		});
+	}
+	
+	if (xhr.status !== 200) {
+		console.log("Ошибка");
+	} else {
+		filterBlock.style.display = "";
+		loadingBlock.style.display = "none";
+		o = JSON.parse(xhr.responseText);
+		o.sort(function (a, b) {
+			return a.name > b.name;
+		});
+	}
+};
+
+xhr.addEventListener("readystatechange", readyFunc);
+
+filterInput.addEventListener('keyup', function(e) {
     let value = this.value.trim();
+		
+	filterResult.innerHTML = "";
+		
+    var arr = [];
+
+	if ((e.keyCode >= 65 && e.keyCode <= 90) || e.keyCode === 8) {
+		if (value !== "") {
+		  for (var i = 0; i < o.length; i++) {
+			if (isMatching(o[i].name, value)) {
+			  arr.push(o[i].name);
+			}
+		  }
+		  if (arr.length === 0) {
+			filterResult.innerHTML = "Результатов не найдено";
+		  } else {
+			for (var i = 0; i < arr.length; i++) {
+			  filterResult.innerHTML += arr[i] + "<br>";
+			}
+		  }
+		}
+	}
 });
 
 export {

@@ -53,6 +53,13 @@ function loadTowns() {
  * @return {boolean}
  */
 function isMatching(full, chunk) {
+	if (full.toLowerCase().indexOf(chunk.toLowerCase()) === -1) {
+		return false;
+	}
+	return true;
+} 
+
+function isMatchingStart(full, chunk) {
 	if (full.toLowerCase().indexOf(chunk.toLowerCase()) === 0) {
 		return true;
 	}
@@ -106,7 +113,7 @@ filterInput.addEventListener('keyup', function(e) {
 	if ((e.keyCode >= 65 && e.keyCode <= 90) || e.keyCode === 8) {
 		if (value !== "") {
 		  for (var i = 0; i < o.length; i++) {
-			if (isMatching(o[i].name, value)) {
+			if (isMatchingStart(o[i].name, value)) {
 			  arr.push(o[i].name);
 			}
 		  }

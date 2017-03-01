@@ -57,13 +57,6 @@ function isMatching(full, chunk) {
 		return false;
 	}
 	return true;
-} 
-
-function isMatchingStart(full, chunk) {
-	if (full.toLowerCase().indexOf(chunk.toLowerCase()) === 0) {
-		return true;
-	}
-	return false;
 }
 
 let loadingBlock = homeworkContainer.querySelector('#loading-block');
@@ -71,49 +64,21 @@ let filterBlock = homeworkContainer.querySelector('#filter-block');
 let filterInput = homeworkContainer.querySelector('#filter-input');
 let filterResult = homeworkContainer.querySelector('#filter-result');
 
-var xhr = new XMLHttpRequest(),
-	o;
-xhr.open('GET', 'https://raw.githubusercontent.com/smelukov/citiesTest/master/cities.json', true);
-xhr.send();
 
-filterBlock.style.display = "none";
 
-var readyFunc = function readyFunc() {
-	if (xhr.readyState !== 4) {
-		loadingBlock.innerHTML = "Не удалось загрузить города";
-		var repeatButton = document.createElement("button");
-		repeatButton.innerText = "Повторить";
-		loadingBlock.appendChild(repeatButton);
-		repeatButton.addEventListener("click", function () {
-			readyFunc();
-		});
-	}
-	
-	if (xhr.status !== 200) {
-		console.log("Ошибка");
-	} else {
-		filterBlock.style.display = "";
-		loadingBlock.style.display = "none";
-		o = JSON.parse(xhr.responseText);
-		o.sort(function (a, b) {
-			return a.name > b.name;
-		});
-	}
-};
-
-xhr.addEventListener("readystatechange", readyFunc);
+let promise2 = loadTowns();
 
 filterInput.addEventListener('keyup', function(e) {
     let value = this.value.trim();
+	promise2.then(function (o) {
+		loadingBlock.style.display = "none";
+		filterResult.innerHTML = "";
 		
-	filterResult.innerHTML = "";
-		
-    var arr = [];
+		var arr = [];
 
-	if ((e.keyCode >= 65 && e.keyCode <= 90) || e.keyCode === 8) {
 		if (value !== "") {
 		  for (var i = 0; i < o.length; i++) {
-			if (isMatchingStart(o[i].name, value)) {
+			if (isMatching(o[i].name, value)) {
 			  arr.push(o[i].name);
 			}
 		  }
@@ -121,11 +86,11 @@ filterInput.addEventListener('keyup', function(e) {
 			filterResult.innerHTML = "Результатов не найдено";
 		  } else {
 			for (var i = 0; i < arr.length; i++) {
-			  filterResult.innerHTML += arr[i] + "<br>";
+			  filterResult.innerHTML += "<div>" + arr[i] + "</div>";
 			}
 		  }
 		}
-	}
+	});
 });
 
 export {

@@ -40,14 +40,10 @@ let addButton = homeworkContainer.querySelector('#add-button');
 let listTable = homeworkContainer.querySelector('#list-table tbody');
 
 var cookie = document.cookie,
-	cookieArr = cookie.split("; "),
-	tempArrRows = []; // [name1=value1], [name2=value2]
+	cookieArr = cookie.split("; ");
 if (cookie !== "") {
 	for (let i = 0; i < cookieArr.length; i++) {
 		createCookieTr(cookieArr[i].split("=")[0], cookieArr[i].split("=")[1]);
-	}
-	for (let i = 0; i < listTable.children.length; i++) {
-		tempArrRows.push(listTable.children[i]);
 	}
 }
 
@@ -80,10 +76,10 @@ function isMatching(full, chunk) {
 function createCookieTr(name, value) {
 	document.cookie = name + "=" + value;
 	var tr = document.createElement("tr");
-
 	tr.innerHTML = "<td>" + name + "</td><td>" + value + "</td><td><button data-name=" + name + ">Удалить</button></td>";	
-	
-	listTable.appendChild(tr);
+	if (isMatching(addNameInput.value, filterNameInput.value) || isMatching(addValueInput.value, filterNameInput.value) || filterNameInput.value === "") {
+		listTable.appendChild(tr);
+	}
 
 	return tr;
 }
@@ -94,23 +90,30 @@ listTable.addEventListener("click", function (e) {
 	if (cookie.indexOf(e.target.dataset.name) !== -1) {
 		document.cookie = e.target.dataset.name + "=; expires=" + new Date(0);	
 	}
+	e.currentTarget.removeChild(e.target.parentNode.parentNode);
+});
 
-	var old = e.currentTarget.removeChild(e.target.parentNode.parentNode);
-	for (var i = 0; i < tempArrRows.length; i++) {
-		if (tempArrRows[i] === old) {
-			tempArrRows.splice(i, 1);
+function getAllCookies() {
+	var cookie = document.cookie,
+		arrCookies = cookie.split("; ");
+
+	for (let i = 0; i < arrCookies.length; i++) {
+		var tr = document.createElement("tr"),
+			name = arrCookies[i].split("=")[0],
+			value = arrCookies[i].split("=")[1];
+
+		if (isMatching(name, filterNameInput.value) ||
+			isMatching(value, filterNameInput.value)) {
+			tr.innerHTML = "<td>" + name + "</td><td>" + value + "</td><td><button data-name=" + name + ">Удалить</button></td>";
+			listTable.appendChild(tr);
 		}
 	}
-});
+
+}
 
 filterNameInput.addEventListener('keyup', function() {
 	listTable.innerHTML = "";
-	for (let i = 0; i < tempArrRows.length; i++) {
-		if (isMatching(tempArrRows[i].children[0].innerHTML, filterNameInput.value) ||
-			isMatching(tempArrRows[i].children[1].innerHTML, filterNameInput.value)) {
-			listTable.appendChild(tempArrRows[i]);
-		}
-	}
+	getAllCookies();
 });
 
 addButton.addEventListener('click', () => {
@@ -121,9 +124,10 @@ addButton.addEventListener('click', () => {
 			k = true;
 		}
 	}
+
 	if (addNameInput.value !== "") {
 		if (!k) {
-			tempArrRows.push(createCookieTr(addNameInput.value, addValueInput.value))
+			createCookieTr(addNameInput.value, addValueInput.value);
 		} else {
 			document.cookie = addNameInput.value + "=; expires=" + new Date(0);
 			document.cookie = addNameInput.value + "=" + addValueInput.value;
@@ -140,7 +144,11 @@ addButton.addEventListener('click', () => {
 			tr.innerHTML = "<td>" + addNameInput.value + "</td>\n" +
 						   "<td>" + addValueInput.value + "</td>\n" + 
 						   "<td><button data-name=" + addNameInput.value + ">Удалить</button></td>\n";
-			listTable.replaceChild(tr, listTable.children[index]);
+			if (isMatching(addNameInput.value, filterNameInput.value)) {
+				listTable.replaceChild(tr, listTable.children[index]);
+			} else {
+				listTable.removeChild(listTable.children[index]);
+			}
 		}
 	}
 });

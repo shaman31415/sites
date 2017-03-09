@@ -80,8 +80,6 @@ function createCookieTr(name, value) {
 	if (isMatching(addNameInput.value, filterNameInput.value) || isMatching(addValueInput.value, filterNameInput.value) || filterNameInput.value === "") {
 		listTable.appendChild(tr);
 	}
-
-	return tr;
 }
 
 listTable.addEventListener("click", function (e) {

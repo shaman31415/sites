@@ -13,12 +13,9 @@ loaders.push({
 });
 
 module.exports = {
-    entry: {
-        main: './src/index.js',
-        cookie: './src/cookie.js'
-    },
+    entry: './src/index.js',
     output: {
-        filename: '[chunkhash].js',
+        filename: '[hash].js',
         path: './dist'
     },
     devtool: 'source-map',
@@ -34,15 +31,8 @@ module.exports = {
         }),
         new ExtractTextPlugin('styles.css'),
         new HtmlPlugin({
-            title: 'Main Homework',
-            template: 'index.hbs',
-            chunks: ['main']
-        }),
-        new HtmlPlugin({
-            title: 'Cookie editor',
-            template: 'cookie.hbs',
-            filename: 'cookie.html',
-            chunks: ['cookie']
+            title: 'Loft School sample project',
+            template: 'index.hbs'
         }),
         new CleanWebpackPlugin(['dist'])
     ]

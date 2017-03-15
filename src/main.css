@@ -1,0 +1,187 @@
+body {
+	background-color: #999;
+}
+
+.modal {
+	background-color: #FFF;
+	border-radius: 10px;
+	left: 50%;
+	position: absolute;
+	top: 50%;
+	transform: translate(-50%, -50%);
+	width: 620px;
+}
+
+.modal-header {
+	align-items: center;
+	background-color: #FF8663;
+	border-radius: 10px 10px 0 0;
+	color: #FFF;
+	display: flex;
+	justify-content: space-between;
+	padding: 15px;
+}
+
+.modal-header .close {
+	background: url("../img/close.png") no-repeat;
+	cursor: pointer;
+	display: inline-block;
+	height: 12px;
+	width: 12px;
+}
+
+.modal-filter {
+	align-items: center;
+	background-color: #F0F0F0;
+	display: flex;
+	justify-content: space-between;
+	padding: 10px 15px;
+}
+
+.modal-filter input[type="text"] {
+	background: #FFF url("../img/search.png") no-repeat 5px center;
+	border: none;
+	border-radius: 20px;
+	box-sizing: border-box;
+	flex-basis: calc(50% - 10px);
+	font-size: 14px;
+	padding: 5px 10px 5px 25px;
+}
+
+.modal-footer {
+	background-color: #F0F0F0;
+	border-radius: 0 0 10px 10px;
+	padding: 10px;
+	text-align: right;
+}
+
+.modal-footer .save {
+	background-color: #FF8663;
+	border: none;
+	border-radius: 10px;
+	color: #FFF;
+	cursor: pointer;
+	font-size: 12px;
+	padding: 10px;
+}
+
+.modal-footer .save:hover {
+	background-color: #D16A47;
+}
+
+.modal-body {
+	color: #4F4F4F;
+	font-size: 14px;
+}
+
+.modal-body-inner {
+	display: flex;
+	height: 320px;
+}
+
+.modal-body .body-left,
+.modal-body .body-right {
+	overflow-y: auto;
+	flex-basis: 50%;
+	padding-left: 15px;
+	padding-right: 15px;
+}
+
+.modal-body .body-left {
+	border-right: 1px solid #F0F0F0;
+}
+
+.modal-body .titles {
+	display: flex;
+}
+
+.modal-body .title {
+	border-bottom: 1px solid #F0F0F0;
+	flex-basis: 50%;
+	padding: 10px 0 5px 15px;
+}
+
+.modal-body .title:first-child {
+	border-right: 1px solid #F0F0F0;
+}
+
+.modal-body .add,
+.modal-body .del {
+	background: url("../img/plus.png") no-repeat;
+	cursor: pointer;
+	display: block;
+	height: 16px;
+	width: 16px;
+}
+
+.modal-body .del {
+	transform: rotate(45deg);
+}
+
+.modal-body-inner ul {
+	list-style-type: none;
+	margin: 0;
+	padding-left: 0;
+}
+
+.modal-body-inner li {
+	border-bottom: 1px solid #F0F0F0;
+	padding-right: 5px;
+}
+
+.modal-body-inner li > div {
+	display: inline-block;
+	vertical-align: middle;
+}
+
+.modal-body-inner li > div:first-child {
+	padding: 5px;
+}
+
+.modal-body-inner li > div:nth-child(2) {
+	width: calc(100% - 85px);
+}
+
+.modal-body-inner li:hover {
+	background-color: #F0F0F0;
+}
+
+.modal-body-inner li div:first-child img {
+	border-radius: 50%;
+	display: block;
+	width: 50px;
+}
+/*--Drag & Drop--*/
+.draggable {
+	color: #4F4F4F;
+	cursor: pointer;
+	font-size: 14px;
+	list-style-type: none;
+}
+
+.draggable > div {
+	display: inline-block;
+	vertical-align: middle;
+}
+
+.draggable > div:first-child {
+	padding: 5px;
+}
+
+.draggable > div:nth-child(2) {
+	width: calc(100% - 85px);
+}
+
+.draggable img {
+	border-radius: 50%;
+	display: block;
+	width: 50px;
+}
+
+.draggable .add {
+	background: url("../img/plus.png") no-repeat;
+	cursor: pointer;
+	display: block;
+	height: 16px;
+	width: 16px;
+}

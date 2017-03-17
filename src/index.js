@@ -49,7 +49,8 @@ new Promise(resolve => {
 				});
 				var arrFirstNames = [],
 					arrLastNames = [],
-					arrPhotos50 = [];
+					arrPhotos50 = [],
+					arrId = [];
 
 				for (let i = 0; i < response.response.items.length; i++) {
 					for (var key in response.response.items[i]) {
@@ -64,59 +65,78 @@ new Promise(resolve => {
 						if (key === "photo_50") {
 							arrPhotos50.push(response.response.items[i][key]);
 						}
+
+						if (key === "id") {
+							arrId.push(response.response.items[i][key]);
+						}
 					}
 				}
 
 				if (localStorage.length === 0) {
 					for (let i = 0; i < arrFirstNames.length; i++) {
-						createLi(ulLeft, arrFirstNames[i], arrLastNames[i], arrPhotos50[i]);
+						createLi(ulLeft, arrFirstNames[i], arrLastNames[i], arrPhotos50[i], arrId[i]);
 					}
 				} else {
-					ulLeft.innerHTML = localStorage.ulLeft;
-					ulRight.innerHTML = localStorage.ulRight;
+					var arrRight = JSON.parse(localStorage.ulRight),
+						arrLeft = JSON.parse(localStorage.ulLeft);
+
+					for (let i = 0; i < arrRight.length; i++) {
+						createLi(ulRight, arrFirstNames[arrRight[i]], arrLastNames[arrRight[i]], arrPhotos50[arrRight[i]], arrId[arrRight[i]], "del");
+					}
+
+					for (let i = 0; i < arrLeft.length; i++) {
+						createLi(ulLeft, arrFirstNames[arrLeft[i]], arrLastNames[arrLeft[i]], arrPhotos50[arrLeft[i]], arrId[arrLeft[i]]);
+					}
 				}
 
-				filterLeft.addEventListener("keyup", e => {
-					for (let i = 0; i < ulLeft.children.length; i++) {
-						if (!isMatching(ulLeft.children[i].children[1].innerText, e.currentTarget.value)) {
-							ulLeft.children[i].style.display = "none";
-						} else {
-							ulLeft.children[i].style.display = "";
-						}
-					}
-				});
+				filter(filterLeft, ulLeft);
+				filter(filterRight, ulRight);
+				dragAndDrop();
 
-				filterRight.addEventListener("keyup", e => {
-					for (let i = 0; i < ulRight.children.length; i++) {
-						if (!isMatching(ulRight.children[i].children[1].innerText, e.currentTarget.value)) {
-							ulRight.children[i].style.display = "none";
-						} else {
-							ulRight.children[i].style.display = "";
-						}
-					}
-				});
+				localStorage.clear();
 
 				save.addEventListener("click", () => {
-					localStorage.ulLeft = ulLeft.innerHTML;
-					localStorage.ulRight = ulRight.innerHTML;
+					var filterIdRight = [],
+						filterIndexRight = [],
+						filterIdLeft = [],
+						filterIndexLeft = [];
+
+					for (let i = 0; i < ulRight.children.length; i++) {
+						filterIdRight.push(ulRight.children[i].dataset.id);
+					}
+
+					for (let i = 0; i < ulLeft.children.length; i++) {
+						filterIdLeft.push(ulLeft.children[i].dataset.id);
+					}
+
+					for (let i = 0; i < arrId.length; i++) {
+						for (let j = 0; j < filterIdRight.length; j++) {
+							if (arrId[i] == filterIdRight[j]) {
+								filterIndexRight.push(i);
+							}
+						}
+					}
+
+					for (let i = 0; i < arrId.length; i++) {
+						for (let j = 0; j < filterIdLeft.length; j++) {
+							if (arrId[i] == filterIdLeft[j]) {
+								filterIndexLeft.push(i);
+							}
+						}
+					}
+
+					localStorage.ulRight = JSON.stringify(filterIndexRight);
+					localStorage.ulLeft = JSON.stringify(filterIndexLeft);
 					alert("Текущее состояние успешно сохранено");
 				});
 
-				function createLi(where, first_name, last_name, photo_50) {
+				function createLi(where, first_name, last_name, photo_50, id, cls = "add") {
 					var li = document.createElement("li");
-					li.innerHTML = "<div><img src=" + photo_50 + " alt=\"\"></div><div>" + first_name + " " + last_name + "</div><div><span class=\"add\"></span></div>";
+					li.innerHTML = "<div><img src=" + photo_50 + " alt=\"\"></div><div>" + first_name + " " + last_name + "</div><div><span class=\"" + cls + "\"></span></div>";
 					li.className = "draggable";
+					li.setAttribute("data-id", id);
 					where.appendChild(li);
 				}
-
-				function isMatching(full, chunk) {
-					if (full.toLowerCase().indexOf(chunk.toLowerCase()) === -1) {
-						return false;
-					}
-					return true;
-				}
-
-				dragAndDrop();
 
 				resolve();
 			}
@@ -125,6 +145,18 @@ new Promise(resolve => {
 }).catch(e => {
 	alert("Ошибка " + e.message);
 });
+
+function filter(input, target) {
+	input.addEventListener("keyup", e => {
+		for (let i = 0; i < target.children.length; i++) {
+			if (!isMatching(target.children[i].children[1].innerText, e.currentTarget.value)) {
+				target.children[i].style.display = "none";
+			} else {
+				target.children[i].style.display = "";
+			}
+		}
+	});	
+}
 
 function dragAndDrop() {
 	var body = document.getElementById("body"),
@@ -179,4 +211,11 @@ function dragAndDrop() {
 			}
 		});
 	});
+}
+
+function isMatching(full, chunk) {
+	if (full.toLowerCase().indexOf(chunk.toLowerCase()) === -1) {
+		return false;
+	}
+	return true;
 }

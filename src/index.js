@@ -92,9 +92,7 @@ new Promise(resolve => {
 				filter(filterLeft, ulLeft);
 				filter(filterRight, ulRight);
 				dragAndDrop();
-
-				localStorage.clear();
-
+				
 				save.addEventListener("click", () => {
 					var filterIdRight = [],
 						filterIndexRight = [],

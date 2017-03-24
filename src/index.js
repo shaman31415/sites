@@ -2,6 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
 	var map,
 		coords,
 		placemark,
+		lonLat,
 		[modal, reviews, mapWrap, address, closeModal, name, place, text, save, overlay] = getVariables([
 			"modal",
 			"reviews",
@@ -14,8 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
 			"save",
 			"overlay"
 		]),
-		// новое
-		arrPlacemarks = [];
+		arrPlacemarksData = [];
 
 	modal.hidden = true;
 	overlay.hidden = true;
@@ -62,6 +62,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 			ymaps.geocode(coords).then(res => {
 	            var firstGeoObject = res.geoObjects.get(0);
+	            	lonLat = res.geoObjects.get(0).geometry.getCoordinates();
 
 	           	address.innerText = firstGeoObject.properties.get("text");
 	        });
@@ -73,22 +74,24 @@ document.addEventListener("DOMContentLoaded", () => {
 	            reviews.appendChild(createReview(name.value, place.value, text.value));
 
 				if (!placemark) {
-		        	placemark = new CreatePlacemark(coords, reviews.innerHTML);
+		        	placemark = createPlacemark(coords);
 				}
 
 	            map.geoObjects.add(placemark);
 
-	            // новое
-	           	arrPlacemarks.push(placemark);
+	            arrPlacemarksData.push({
+	            	coords: lonLat,
+	            	name: name.value,
+	            	place: place.value,
+	            	date: formatDate(new Date()),
+	            	review: text.value
+	            });
 
 	            name.value = "";
 	            place.value = "";
 	            text.value = "";
 
-	            // новое
-	            placemark.events.add("click", () => {
-	            	reviews.innerHTML = placemark.cache;
-	            });
+	            placemark = null;
 			} else {
 				alert("Нужно заполнить все поля!")
 			}
@@ -149,10 +152,7 @@ document.addEventListener("DOMContentLoaded", () => {
 			review.appendChild(val);
 		}
 
-		day = currentDate.getDate() < 10 ? "0" + currentDate.getDate() : currentDate.getDate();
-		month = currentDate.getMonth() < 9 ? "0" + (currentDate.getMonth() + 1) : currentDate.getMonth() + 1;
-		year = String(currentDate.getFullYear()).slice(2);
-		textDate = day + "." + month + "." + year;
+		textDate = formatDate(currentDate);
 
 		name.innerText = n;
 		place.innerText = p;
@@ -162,9 +162,14 @@ document.addEventListener("DOMContentLoaded", () => {
 		return review;
 	}
 
-	// cache - новое
-    function CreatePlacemark(coords, cache) {
-    	this.cache = cache;
+	function formatDate(currentDate) {
+		day = currentDate.getDate() < 10 ? "0" + currentDate.getDate() : currentDate.getDate();
+		month = currentDate.getMonth() < 9 ? "0" + (currentDate.getMonth() + 1) : currentDate.getMonth() + 1;
+		year = String(currentDate.getFullYear()).slice(2);
+		return day + "." + month + "." + year;
+	}
+
+    function createPlacemark(coords) {
         return new ymaps.Placemark(coords);
     }
 });

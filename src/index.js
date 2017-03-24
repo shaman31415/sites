@@ -1,182 +1,178 @@
-"use strict";
-new Promise(resolve => {
-	if (document.readyState === "complete") {
-		resolve();
-	} else {
-		window.addEventListener("load", resolve);
-	}
-}).then((resolve, reject) => {
-	VK.init({
-		apiId: 5919763
+document.addEventListener("DOMContentLoaded", () => {
+	var map,
+		coords,
+		placemark,
+		[modal, reviews, mapWrap, address, closeModal, name, place, text, save, overlay] = getVariables([
+			"modal",
+			"reviews",
+			"map",
+			"address",
+			"close",
+			"name",
+			"place",
+			"review",
+			"save",
+			"overlay"
+		]),
+		// новое
+		arrPlacemarks = [];
+
+	modal.hidden = true;
+	overlay.hidden = true;
+
+	overlay.addEventListener("click", () => {
+		closeAndClear();
 	});
 
-	VK.Auth.login(response => {
-		if (response.session) {
-			console.log("Всё ок");
-		} else {
-			alert("Не удалось авторизоваться!");
-		}
-	}, 8);
-}).then(() => {
-	return new Promise((resolve, reject) => {
-		VK.api("friends.get", {
-			v: 5.62,
-			fields: ["photo_50"]
-		}, response => {
-			if (response.error) {
-				reject(new Error(response.error.error_msg));
-			} else {
-				var body = document.getElementById("body"),
-					ulLeft = body.querySelector(".body-left ul"),
-					ulRight = body.querySelector(".body-right ul"),
-					filterLeft = document.getElementById("filter-left"),
-					filterRight = document.getElementById("filter-right"),
-					save = document.getElementById("save");
+	ymaps.ready(init);
 
-				body.addEventListener("click", e => {
-					var target = e.target,
-						liTarget = target.parentNode.parentNode;
+	function init() {     
+	    map = new ymaps.Map("map", {
+	        center: [55.75, 37.63],
+	        zoom: 12
+	    });
 
-					if (target.className === "add") {
-						target.classList.remove("add");
-						target.classList.add("del");
-						ulRight.appendChild(liTarget);
-					} else if (target.className === "del") {
-						target.classList.remove("del");
-						target.classList.add("add");
-						ulLeft.appendChild(liTarget);
-					} else return;
-				});
-				var arrFirstNames = [],
-					arrLastNames = [],
-					arrPhotos50 = [];
+		map.cursors.push("arrow");
 
-				for (let i = 0; i < response.response.items.length; i++) {
-					for (var key in response.response.items[i]) {
-						if (key === "first_name") {
-							arrFirstNames.push(response.response.items[i][key])
-						}
+		closeModal.addEventListener("click", () => {
+			closeAndClear();
+		});
 
-						if (key === "last_name") {
-							arrLastNames.push(response.response.items[i][key]);
-						}
+		mapWrap.addEventListener("click", e => {
+			if (modal.hidden) {
+				modal.hidden = false;
+				overlay.hidden = false;
+			}
 
-						if (key === "photo_50") {
-							arrPhotos50.push(response.response.items[i][key]);
-						}
-					}
-				}
+			modal.style.left = (document.documentElement.offsetWidth - e.pageX) < modal.offsetWidth ?
+							  (document.documentElement.offsetWidth - modal.offsetWidth) + "px" : e.pageX + "px";
 
-				if (localStorage.length === 0) {
-					for (let i = 0; i < arrFirstNames.length; i++) {
-						createLi(ulLeft, arrFirstNames[i], arrLastNames[i], arrPhotos50[i]);
-					}
-				} else {
-					ulLeft.innerHTML = localStorage.ulLeft;
-					ulRight.innerHTML = localStorage.ulRight;
-				}
+			modal.style.top = (document.documentElement.offsetHeight - e.pageY) < modal.offsetHeight ?
+							  (document.documentElement.offsetHeight - modal.offsetHeight) + "px" : e.pageY + "px";
 
-				filterLeft.addEventListener("keyup", e => {
-					for (let i = 0; i < ulLeft.children.length; i++) {
-						if (!isMatching(ulLeft.children[i].children[1].innerText, e.currentTarget.value)) {
-							ulLeft.children[i].style.display = "none";
-						} else {
-							ulLeft.children[i].style.display = "";
-						}
-					}
-				});
-
-				filterRight.addEventListener("keyup", e => {
-					for (let i = 0; i < ulRight.children.length; i++) {
-						if (!isMatching(ulRight.children[i].children[1].innerText, e.currentTarget.value)) {
-							ulRight.children[i].style.display = "none";
-						} else {
-							ulRight.children[i].style.display = "";
-						}
-					}
-				});
-
-				save.addEventListener("click", () => {
-					localStorage.ulLeft = ulLeft.innerHTML;
-					localStorage.ulRight = ulRight.innerHTML;
-					alert("Текущее состояние успешно сохранено");
-				});
-
-				function createLi(where, first_name, last_name, photo_50) {
-					var li = document.createElement("li");
-					li.innerHTML = "<div><img src=" + photo_50 + " alt=\"\"></div><div>" + first_name + " " + last_name + "</div><div><span class=\"add\"></span></div>";
-					li.className = "draggable";
-					where.appendChild(li);
-				}
-
-				function isMatching(full, chunk) {
-					if (full.toLowerCase().indexOf(chunk.toLowerCase()) === -1) {
-						return false;
-					}
-					return true;
-				}
-
-				dragAndDrop();
-
-				resolve();
+			if (!reviews.children.length) {
+				reviews.appendChild(createEmpty());
 			}
 		});
-	})
-}).catch(e => {
-	alert("Ошибка " + e.message);
+
+		map.events.add("click", e => {
+			reviews.innerHTML = "";
+
+			coords = e.get("coords");
+
+			ymaps.geocode(coords).then(res => {
+	            var firstGeoObject = res.geoObjects.get(0);
+
+	           	address.innerText = firstGeoObject.properties.get("text");
+	        });
+		});
+
+        save.addEventListener("click", e => {
+			if (name.value && place.value && text.value) {
+	            removeEmpty();
+	            reviews.appendChild(createReview(name.value, place.value, text.value));
+
+				if (!placemark) {
+		        	placemark = new CreatePlacemark(coords, reviews.innerHTML);
+				}
+
+	            map.geoObjects.add(placemark);
+
+	            // новое
+	           	arrPlacemarks.push(placemark);
+
+	            name.value = "";
+	            place.value = "";
+	            text.value = "";
+
+	            // новое
+	            placemark.events.add("click", () => {
+	            	reviews.innerHTML = placemark.cache;
+	            });
+			} else {
+				alert("Нужно заполнить все поля!")
+			}
+		});
+	}
+
+	function getVariables(arr) {
+		for (var i = 0; i < arr.length; i++) {
+			arr[i] = document.getElementById(arr[i]);
+		}
+		return arr;
+	}
+
+	function closeAndClear() {
+		modal.hidden = true;
+		overlay.hidden = true;
+		reviews.innerHTML = "";
+	    createEmpty();		
+	}
+
+	function createEmpty() {
+		var emptyReviews = document.createElement("div");
+
+		emptyReviews.className = "reviews_empty";
+		emptyReviews.id = "reviews_empty";
+		emptyReviews.innerText = "Отзывов пока нет...";
+
+		return emptyReviews;
+	}
+
+	function removeEmpty() {
+		var empty = document.getElementById("reviews_empty");
+		if (empty) {
+			empty.parentNode.removeChild(empty);
+		}
+	}
+
+	function createReview(n, p, t) {
+		var review = document.createElement("div"),
+			name = document.createElement("span"),
+			place = document.createElement("span"),
+			date = document.createElement("span"),
+			text = document.createElement("div"),
+			currentDate = new Date(),
+			textDate = "",
+			day,
+			month,
+			year;
+			collectReview = [name, place, date, text];
+
+		review.className = "review";
+		name.className = "name";
+		place.className = "place";
+		date.className = "date";
+		text.className = "text";
+
+		for (let val of collectReview) {
+			review.appendChild(val);
+		}
+
+		day = currentDate.getDate() < 10 ? "0" + currentDate.getDate() : currentDate.getDate();
+		month = currentDate.getMonth() < 9 ? "0" + (currentDate.getMonth() + 1) : currentDate.getMonth() + 1;
+		year = String(currentDate.getFullYear()).slice(2);
+		textDate = day + "." + month + "." + year;
+
+		name.innerText = n;
+		place.innerText = p;
+		date.innerText = textDate;
+		text.innerText = t;
+
+		return review;
+	}
+
+	// cache - новое
+    function CreatePlacemark(coords, cache) {
+    	this.cache = cache;
+        return new ymaps.Placemark(coords);
+    }
 });
 
-function dragAndDrop() {
-	var body = document.getElementById("body"),
-		ulLeft = body.querySelector(".body-left ul"),
-		ulRight = body.querySelector(".body-right ul");
-
-	ulLeft.addEventListener("dragstart", e => {
-		if (e.target.tagName === "IMG") {
-			e.preventDefault();
-		}
-	});
-
-	ulLeft.addEventListener("mousedown", e => {
-		var target = e.target,
-			li = target.closest(".draggable"),
-			cloneLi = li.cloneNode(true),
-			shiftX = e.pageX - target.getBoundingClientRect().left,
-			shiftY = e.pageY - target.getBoundingClientRect().top;
-
-		if (target.className === "add") return;
-		if (li.tagName !== "LI") return;
-
-		cloneLi.style.backgroundColor = "#FFF";
-		cloneLi.style.position = "absolute";
-		cloneLi.style.opacity = "0.8";
-		cloneLi.style.left = li.getBoundingClientRect().left + "px";
-		cloneLi.style.top = li.getBoundingClientRect().top + "px";
-		cloneLi.style.width = li.offsetWidth + "px";
-		cloneLi.style.zIndex = 1;
-		cloneLi.style.outline = "1px solid rgba(0, 0, 0, 0.5)";
-
-		document.body.appendChild(cloneLi);
-
-		function move(e) {
-	    	cloneLi.style.left = (e.pageX - shiftX) + 'px';
-	    	cloneLi.style.top = (e.pageY - shiftY) + 'px';
-	    	document.body.style.overflowX = "hidden";
-		}
-
-		document.addEventListener("mousemove", move);
-
-		document.addEventListener("mouseup", e => {
-			var add = li.querySelector(".add");
-
-			document.removeEventListener("mousemove", move);
-			document.body.removeChild(cloneLi);
-
-			if (e.pageX < ulRight.getBoundingClientRect().right && e.pageX > ulRight.getBoundingClientRect().left &&
-				e.pageY > ulRight.getBoundingClientRect().top && e.pageY < ulRight.parentNode.getBoundingClientRect().bottom) {
-				ulRight.appendChild(li);
-				add.className = "del";
-			}
-		});
-	});
-}
+/*--0) Форма будет одна, меняться будут только данные формы для каждого объекта--*/
+/*--1) Клик по карте - открытие всплывающего окна с формой, в заголовке адрес выбранного объекта--*/
+/*--2) После добавления отзыва он появляется в форме, и появляется метка--*/
+/*--3) Больше одного отзыва поблизости объединяются в кластер с числом меток--*/
+/*--4) При клике на одиночную метку появляется форма с отзывом--*/
+/*--5) При клике на кластер появляется карусель с отзывами--*/
+/*--6) При клике на адрес в карусели появляется форма с одним отзывом--*/

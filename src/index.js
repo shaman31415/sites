@@ -81,7 +81,6 @@ document.addEventListener("DOMContentLoaded", () => {
 				}
 
 				arrPlacemarks.push(placemark);
-				alert(arrPlacemarks.length);
 
 	            map.geoObjects.add(placemark);
 		    	clusterer.add(arrPlacemarks);
@@ -139,7 +138,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         clusterer.options.set({
-	        gridSize: 150,
+	        gridSize: 100,
 	        clusterDisableClickZoom: true
 	    });
 

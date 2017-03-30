@@ -15,7 +15,9 @@ document.addEventListener("DOMContentLoaded", () => {
 			"save",
 			"overlay"
 		]),
-		arrPlacemarksData = [];
+		objPlacemarksData = {},
+		arrPlacemarks = [],
+		clusterer;
 
 	modal.hidden = true;
 	overlay.hidden = true;
@@ -65,6 +67,7 @@ document.addEventListener("DOMContentLoaded", () => {
 	            	lonLat = res.geoObjects.get(0).geometry.getCoordinates();
 
 	           	address.innerText = firstGeoObject.properties.get("text");
+	           	objPlacemarksData[firstGeoObject.properties.get("text")] = {};
 	        });
 		});
 
@@ -77,15 +80,46 @@ document.addEventListener("DOMContentLoaded", () => {
 		        	placemark = createPlacemark(coords);
 				}
 
-	            map.geoObjects.add(placemark);
+				arrPlacemarks.push(placemark);
+				alert(arrPlacemarks.length);
 
-	            arrPlacemarksData.push({
-	            	coords: lonLat,
-	            	name: name.value,
-	            	place: place.value,
-	            	date: formatDate(new Date()),
-	            	review: text.value
+	            map.geoObjects.add(placemark);
+		    	clusterer.add(arrPlacemarks);
+
+	            var arrNames = [],
+			        arrPlaces = [],
+			        arrReviews = [];
+
+        		arrNames.push(name.value);
+        		arrPlaces.push(place.value);
+        		arrReviews.push(text.value);
+
+	            placemark.events.add("click", e => {
+
+					var objData = {
+		            	coords: lonLat,
+		            	iname: arrNames,
+		            	place: arrPlaces,
+		            	date: formatDate(new Date()),
+		            	review: arrReviews
+	        		};
+	            	removeEmpty();
+	            	for (let i = 0; i < arrNames.length; i++) {
+	            		reviews.appendChild(createReview(objData.iname[i], objData.place[i], objData.review[i]));
+	            	}
 	            });
+
+	            ymaps.geocode(coords).then(res => {
+		            var firstGeoObject = res.geoObjects.get(0),
+		            	currentAddress = firstGeoObject.properties.get("text");
+		            
+		           	placemark.events.add("click", e => {
+		        		address.innerText = currentAddress;
+		            	console.dir(objPlacemarksData);
+		            });
+		            objPlacemarksData[currentAddress].reviewsAll = reviews.innerHTML
+
+		        });
 
 	            name.value = "";
 	            place.value = "";
@@ -96,10 +130,24 @@ document.addEventListener("DOMContentLoaded", () => {
 				alert("Нужно заполнить все поля!")
 			}
 		});
+
+		clusterer = new ymaps.Clusterer({
+            preset: 'islands#invertedBlueClusterIcons',
+            groupByCoordinates: false,
+            clusterDisableClickZoom: true,
+            geoObjectHideIconOnBalloonOpen: false
+        });
+
+        clusterer.options.set({
+	        gridSize: 150,
+	        clusterDisableClickZoom: true
+	    });
+
+	    map.geoObjects.add(clusterer);
 	}
 
 	function getVariables(arr) {
-		for (var i = 0; i < arr.length; i++) {
+		for (let i = 0; i < arr.length; i++) {
 			arr[i] = document.getElementById(arr[i]);
 		}
 		return arr;
@@ -173,11 +221,3 @@ document.addEventListener("DOMContentLoaded", () => {
         return new ymaps.Placemark(coords);
     }
 });
-
-/*--0) Форма будет одна, меняться будут только данные формы для каждого объекта--*/
-/*--1) Клик по карте - открытие всплывающего окна с формой, в заголовке адрес выбранного объекта--*/
-/*--2) После добавления отзыва он появляется в форме, и появляется метка--*/
-/*--3) Больше одного отзыва поблизости объединяются в кластер с числом меток--*/
-/*--4) При клике на одиночную метку появляется форма с отзывом--*/
-/*--5) При клике на кластер появляется карусель с отзывами--*/
-/*--6) При клике на адрес в карусели появляется форма с одним отзывом--*/
